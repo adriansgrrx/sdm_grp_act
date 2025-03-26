@@ -1,10 +1,9 @@
 <?php
 session_start();
-if (!isset($_SESSION['user'])) {
-    header("Location: index.php");
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
     exit();
 }
-$user = $_SESSION['user'];
 ?>
 
 <!DOCTYPE html>
@@ -36,7 +35,7 @@ $user = $_SESSION['user'];
 <body>
     <div class="container">
         <div class="welcome-container">
-            <h2>Welcome, <?php echo htmlspecialchars($user); ?>!</h2>
+            <h2>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h2>
             <p>You have successfully logged in.</p>
             <form action="logout.php" method="POST">
                 <button type="submit" class="btn btn-primary">Logout</button>

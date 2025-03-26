@@ -3,7 +3,7 @@ session_start();
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "confidential_fund_distribution";
+$dbname = "cfd";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -15,12 +15,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $_POST['username'];
     $pass = $_POST['password'];
     
-    // VULNERABLE SQL QUERY (Allows SQL Injection)
     $sql = "SELECT * FROM users WHERE username = '$user' AND password = '$pass'";
     $result = $conn->query($sql);
-    
-    if ($result->num_rows > 0) {
-        $_SESSION['user'] = $user;
+
+    if ($row = $result->fetch_assoc()) {
+        // Store the username fetched from the database
+        $_SESSION['username'] = $row['username']; 
         header("Location: landing.php");
         exit();
     } else {
@@ -29,6 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html>
