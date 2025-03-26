@@ -15,11 +15,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $_POST['username'];
     $pass = $_POST['password'];
     
-    // Secure query using prepared statements
-    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
-    $stmt->bind_param("ss", $user, $pass);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // VULNERABLE SQL QUERY (Allows SQL Injection)
+    $sql = "SELECT * FROM users WHERE username = '$user' AND password = '$pass'";
+    $result = $conn->query($sql);
     
     if ($result->num_rows > 0) {
         $_SESSION['user'] = $user;
@@ -28,8 +26,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         echo "Invalid credentials!";
     }
-    
-    $stmt->close();
 }
 $conn->close();
 ?>
@@ -39,7 +35,7 @@ $conn->close();
 <head>
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Login</title>
+    <title>Vulnerable Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .login-container {
