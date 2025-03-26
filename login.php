@@ -11,32 +11,63 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Define restricted characters
+$restrictedChars = ["<", ">", "'", "\"", "--", ";"];
+
+// Function to detect restricted characters and return only those found
+function detectRestrictedChars($input, $restrictedChars) {
+    $found = array_filter($restrictedChars, function ($char) use ($input) {
+        return strpos($input, $char) !== false;
+    });
+    return implode(" ", $found); // Return detected characters as a string
+}
+
+// Function to sanitize input by removing restricted characters
+function sanitizeInput($input, $restrictedChars) {
+    return str_replace($restrictedChars, "", trim($input));
+}
+
+$loginError = "";
+$charError = "";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $_POST['username'];
     $pass = $_POST['password'];
-    
-    $sql = "SELECT * FROM users WHERE username = '$user' AND password = '$pass'";
-    $result = $conn->query($sql);
 
-    if ($row = $result->fetch_assoc()) {
-        // Store the username fetched from the database
-        $_SESSION['username'] = $row['username']; 
-        header("Location: landing.php");
-        exit();
+    // Detect restricted characters
+    $invalidChars = detectRestrictedChars($user, $restrictedChars);
+    
+    if (!empty($invalidChars)) {
+        $charError = "Invalid characters detected: " . htmlspecialchars($invalidChars);
     } else {
-        echo "Invalid credentials!";
+        $user = sanitizeInput($user, $restrictedChars);
+        $pass = sanitizeInput($pass, $restrictedChars);
+
+        // Use prepared statements to prevent SQL injection
+        $stmt = $conn->prepare("SELECT username FROM users WHERE username = ? AND password = ?");
+        $stmt->bind_param("ss", $user, $pass);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            $_SESSION['username'] = $row['username']; 
+            header("Location: landing.php");
+            exit();
+        } else {
+            $loginError = "Invalid username or password!";
+        }
+        $stmt->close();
     }
 }
 $conn->close();
 ?>
 
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulnerable Login</title>
+    <title>Secure Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .login-container {
@@ -51,8 +82,13 @@ $conn->close();
             background: rgb(22, 230, 230);
             border: none;
         }
-        .btn:hover{
+        .btn:hover {
             background: rgb(0, 185, 185);
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -64,6 +100,9 @@ $conn->close();
                 <div class="mb-3">
                     <label class="form-label">Username:</label>
                     <input type="text" name="username" class="form-control" required>
+                    <?php if (!empty($charError)) : ?>
+                        <div class="error-message"><?php echo $charError; ?></div>
+                    <?php endif; ?>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Password:</label>
@@ -73,6 +112,13 @@ $conn->close();
             </form>
         </div>
     </div>
+
+    <?php if (!empty($loginError)) : ?>
+        <script>
+            alert("<?php echo $loginError; ?>");
+        </script>
+    <?php endif; ?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
