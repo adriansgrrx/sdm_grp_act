@@ -77,6 +77,23 @@ $conn->close();
             background: #fff;
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .login-error {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: <?php echo empty($loginError) ? 'none' : 'block'; ?>;
         }
         .btn {
             background: rgb(22, 230, 230);
@@ -85,16 +102,12 @@ $conn->close();
         .btn:hover {
             background: rgb(0, 185, 185);
         }
-        .error-message {
-            color: red;
-            font-size: 14px;
-            margin-top: 5px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="login-container">
+            <div class="login-error"><?php echo $loginError; ?></div> <!-- Invalid Credentials Message -->
             <h3 class="text-center">Login</h3>
             <form method="POST" action="">
                 <div class="mb-3">
@@ -112,12 +125,6 @@ $conn->close();
             </form>
         </div>
     </div>
-
-    <?php if (!empty($loginError)) : ?>
-        <script>
-            alert("<?php echo $loginError; ?>");
-        </script>
-    <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
